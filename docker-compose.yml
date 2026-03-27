@@ -10,7 +10,6 @@ services:
     volumes:
       - ./backend:/app
       - sqlite_data:/app/data
-      - ./uploads:/app/uploads
     environment:
       - DATABASE_URL=sqlite:////app/data/music.sqlite3
 
