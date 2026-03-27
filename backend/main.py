@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.db import create_db_and_tables
 import app.models.music  # Required to register the table
@@ -10,6 +11,14 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="Music Transcriber MVP", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(upload_router, prefix="/api/v1/music", tags=["Music"])
 
