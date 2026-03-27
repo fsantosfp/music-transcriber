@@ -4,3 +4,32 @@
 1. Have Docker installed and ready.
 2. Run `docker-compose up --build -d`
 3. Access API at `http://localhost:8000/health`
+
+## API Endpoints
+
+### 1. Upload de Áudio
+Rota para ingestão de arquivos de áudio suportados (`.mp3`, `.wav`, `.m4a`, `.ogg`) limitado a `50MB` (configurável via variável de ambiente `MAX_UPLOAD_SIZE_MB`).
+
+**POST** `/api/v1/music/upload`
+
+- **Tipo do Body**: `multipart/form-data`
+- **Campo Obrigatório**: `file`
+
+#### Exemplo prático de requisição (cURL)
+```bash
+curl -X POST -F "file=@caminho/do/seu/audio.mp3;type=audio/mpeg" http://localhost:8000/api/v1/music/upload
+```
+
+#### Retorno Esperado (Status 201 Created)
+O áudio recebido terá o nome original sanitizado e mesclado a um UUID único evitando falsos positivos ao gravar no banco de dados e persistir o arquivo em disco na pasta `/uploads`.
+```json
+{
+  "id": "3cb2b0b6-f8bc-4dce-adcd-6e412dfa00e9",
+  "filename": "meu_audio_sanitizado.mp3",
+  "status": "PENDING",
+  "audio_path": "uploads/3cb2b0b6-...-meu_audio.mp3",
+  "raw_transcription": null,
+  "formatted_transcription": null,
+  "created_at": "2026-03-27T21:06:29.691330"
+}
+```
