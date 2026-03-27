@@ -34,3 +34,9 @@ O áudio recebido terá o nome original sanitizado e mesclado a um UUID único e
   "created_at": "2026-03-27T21:06:29.691330"
 }
 ```
+
+#### Processamento em Segundo Plano (Background Task)
+Imediatamente após o upload (resposta `201 Created`), a API inicia a transcrição do áudio utilizando a IA `faster-whisper` assincronamente.
+Durante o processamento, o `status` do registro evolui para `PROCESSING_WHISPER`.
+- Quando finalizado com sucesso (confiança > 35%), o JSON com o texto e os *timestamps* é salvo em `raw_transcription` e o status passa para `COMPLETED`. 
+- Caso a probabilidade detectada seja baixa (abaixo de 35%, indicando possível ruído ou apenas instrumental), o status será modificado para o fallback `ISOLATING_VOCALS`.
