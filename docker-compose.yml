@@ -9,7 +9,6 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - sqlite_data:/app/data
     environment:
       - DATABASE_URL=sqlite:////app/data/music.sqlite3
 
@@ -24,6 +23,3 @@ services:
       - /app/node_modules
     depends_on:
       - backend
-
-volumes:
-  sqlite_data:
