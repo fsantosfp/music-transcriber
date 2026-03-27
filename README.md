@@ -1,9 +1,10 @@
 # Music Transcriber MVP
 
 ## Instructions
-1. Have Docker installed and ready.
-2. Run `docker-compose up --build -d`
-3. Access API at `http://localhost:8000/health`
+1. Certifique-se de que o Docker e Docker-Compose estão instalados.
+2. Suba a orquestração via comando: `docker-compose up --build -d`
+3. Acesse a **Interface do Aplicativo (Frontend)** em: `http://localhost:5173`
+4. A API (Backend) responderá na porta 8000: `http://localhost:8000` (Ex: `/health`)
 
 ## API Endpoints
 

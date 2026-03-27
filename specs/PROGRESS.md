@@ -3,7 +3,7 @@
 ## Milestone 1: O Alicerce (Infra & Ingestão)
 - [x] Tarefa 1.1: Setup Docker, Git e Estrutura de Pastas.
 - [x] Tarefa 1.2: Endpoint de Upload e Persistência no SQLite.
-- [ ] Tarefa 1.3: Frontend Base (Vite + Dropzone) e Conexão com API.
+- [x] Tarefa 1.3: Frontend Base (Vite + Dropzone) e Conexão com API.
 > **GATE DE QUALIDADE:** Validar se o áudio aparece na pasta /uploads e no banco.
 
 ## Milestone 2: O Cérebro (Pipeline de IA)
