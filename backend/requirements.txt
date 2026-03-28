@@ -6,3 +6,4 @@ httpx
 python-multipart
 aiofiles
 faster-whisper
+google-genai

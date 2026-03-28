@@ -8,7 +8,7 @@
 
 ## Milestone 2: O Cérebro (Pipeline de IA)
 - [x] Tarefa 2.1: Integração com Faster-Whisper para transcrição bruta.
-- [ ] Tarefa 2.2: Formatação via LLM (System Prompt).
+- [x] Tarefa 2.2: Formatação via LLM (System Prompt).
 - [ ] Tarefa 2.3: Fallback com Demucs (Isolamento de Vocal).
 - [ ] Tarefa 2.4: Endpoint de Status (Polling).
 > **GATE DE QUALIDADE:** Processar áudio de teste e verificar JSON (segments + letra).
