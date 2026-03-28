@@ -17,6 +17,7 @@ export function MusicViewer() {
     const [segments, setSegments] = useState<any[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [savedNotice, setSavedNotice] = useState(false);
+    const [playingSegment, setPlayingSegment] = useState<number | null>(null);
 
     const waveformRef = useRef<HTMLDivElement>(null);
     const wavesurfer = useRef<WaveSurfer | null>(null);
@@ -66,8 +67,8 @@ export function MusicViewer() {
         const ws = wavesurfer.current;
 
         ws.on('play', () => setIsPlaying(true));
-        ws.on('pause', () => setIsPlaying(false));
-        ws.on('finish', () => setIsPlaying(false));
+        ws.on('pause', () => { setIsPlaying(false); setPlayingSegment(null); });
+        ws.on('finish', () => { setIsPlaying(false); setPlayingSegment(null); });
 
         ws.setVolume(volume);
 
@@ -89,9 +90,15 @@ export function MusicViewer() {
         }
     };
 
-    const playSegment = (start: number, end: number) => {
+    const toggleSegmentPlay = (index: number, start: number, end: number) => {
         if (!wavesurfer.current) return;
-        wavesurfer.current.play(start, end);
+        if (isPlaying && playingSegment === index) {
+            wavesurfer.current.pause();
+            setPlayingSegment(null);
+        } else {
+            wavesurfer.current.play(start, end);
+            setPlayingSegment(index);
+        }
     };
 
     const toggleEditMode = () => {
@@ -173,14 +180,14 @@ export function MusicViewer() {
                 Voltar pro Dashboard
             </Link>
 
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 mb-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-xl shadow-sm">
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 mb-8 overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 flex-wrap">
+                    <div className="flex items-center gap-4 max-w-full">
+                        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-xl shadow-sm flex-shrink-0">
                             <MusicIcon className="w-6 h-6" />
                         </div>
-                        <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-800 line-clamp-1" title={track.filename}>
+                        <div className="min-w-0">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-800 truncate" title={track.filename}>
                                 {track.filename}
                             </h1>
                             <p className="text-gray-500 text-sm mt-0.5">
@@ -189,7 +196,7 @@ export function MusicViewer() {
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 sm:ml-auto">
                         {track.raw_transcription && (
                             <button
                                 onClick={toggleEditMode}
@@ -261,11 +268,11 @@ export function MusicViewer() {
                         {segments.map((seg, idx) => (
                             <div key={idx} className="flex items-start gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100 group">
                                 <button
-                                    onClick={() => playSegment(seg.start, seg.end)}
-                                    title="Ouvir este trecho"
-                                    className="mt-1 flex-shrink-0 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2.5 rounded-full transition-colors cursor-pointer"
+                                    onClick={() => toggleSegmentPlay(idx, seg.start, seg.end)}
+                                    title={isPlaying && playingSegment === idx ? "Pausar" : "Ouvir este trecho"}
+                                    className={`mt-1 flex-shrink-0 p-2.5 rounded-full transition-colors cursor-pointer ${isPlaying && playingSegment === idx ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 shadow-inner' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
                                 >
-                                    <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+                                    {isPlaying && playingSegment === idx ? <Pause className="w-4 h-4" fill="currentColor" /> : <Play className="w-4 h-4 ml-0.5" fill="currentColor" />}
                                 </button>
                                 <div className="flex-1">
                                     <input
