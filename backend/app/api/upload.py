@@ -218,3 +218,36 @@ def retry_music_processing(music_id: uuid.UUID, background_tasks: BackgroundTask
     # Restart the workflow from scratch
     background_tasks.add_task(process_transcription, str(music.id))
     return music
+
+@router.delete("/{music_id}", status_code=204)
+def delete_music(music_id: uuid.UUID, session: Session = Depends(get_session)):
+    """
+    Safely purges the database record alongside all physical media (Original and Vocal stems) from the /uploads folder.
+    """
+    music = session.get(Music, music_id)
+    if not music:
+        raise HTTPException(status_code=404, detail="Music not found")
+        
+    base_dir = "/app"
+    
+    # 1. Attempt to remove original audio
+    if music.audio_path:
+        full_audio_path = os.path.join(base_dir, music.audio_path)
+        try:
+            if os.path.exists(full_audio_path):
+                os.remove(full_audio_path)
+        except Exception as e:
+            print(f"Failed to delete original audio file {full_audio_path}: {e}")
+            
+    # 2. Attempt to remove isolated vocal traces
+    vocal_path = os.path.join(base_dir, "uploads", f"{music.id}_vocals.wav")
+    try:
+        if os.path.exists(vocal_path):
+            os.remove(vocal_path)
+    except Exception as e:
+        print(f"Failed to delete vocal traces {vocal_path}: {e}")
+        
+    # 3. Nuke from SQLite
+    session.delete(music)
+    session.commit()
+    return None

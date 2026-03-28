@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { StatusBadge, type MusicStatusType } from '../components/StatusBadge';
-import { FileAudio, ChevronRight, Upload, RotateCcw } from 'lucide-react';
+import { FileAudio, ChevronRight, Upload, RotateCcw, Trash2, AlertTriangle, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export interface MusicTrack {
@@ -17,6 +17,10 @@ export interface MusicTrack {
 export function Dashboard() {
     const [tracks, setTracks] = useState<MusicTrack[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteInput, setDeleteInput] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchTracks = async () => {
         try {
@@ -40,6 +44,36 @@ export function Dashboard() {
         } catch (error) {
             console.error("Error retrying track:", error);
             alert("Erro ao tentar reprocessar o áudio.");
+        }
+    };
+
+    const toggleSelection = (id: string) => {
+        setSelectedTracks(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+    };
+
+    const toggleAll = () => {
+        if (selectedTracks.length === tracks.length) {
+            setSelectedTracks([]);
+        } else {
+            setSelectedTracks(tracks.map(t => t.id));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        setIsDeleting(true);
+        try {
+            await Promise.all(
+                selectedTracks.map(id => axios.delete(`http://localhost:8000/api/v1/music/${id}`))
+            );
+            setTracks(prev => prev.filter(t => !selectedTracks.includes(t.id)));
+            setSelectedTracks([]);
+            setIsDeleteModalOpen(false);
+            setDeleteInput("");
+        } catch (error) {
+            console.error("Failed to delete tracks:", error);
+            alert("Ocorreu um erro ao excluir algumas faixas.");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -94,6 +128,11 @@ export function Dashboard() {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
                                 <tr>
+                                    <th className="px-6 py-4 whitespace-nowrap w-4">
+                                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                            checked={selectedTracks.length > 0 && selectedTracks.length === tracks.length}
+                                            onChange={toggleAll} />
+                                    </th>
                                     <th className="px-6 py-4 whitespace-nowrap">Arquivo Físico</th>
                                     <th className="px-6 py-4 whitespace-nowrap">Upload realizado em</th>
                                     <th className="px-6 py-4 whitespace-nowrap">Status da IA</th>
@@ -102,7 +141,12 @@ export function Dashboard() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {tracks.map((track) => (
-                                    <tr key={track.id} className="hover:bg-blue-50/30 transition-colors">
+                                    <tr key={track.id} className={`transition-colors ${selectedTracks.includes(track.id) ? 'bg-blue-50/50 hover:bg-blue-50/70' : 'hover:bg-gray-50'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap w-4">
+                                            <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                checked={selectedTracks.includes(track.id)}
+                                                onChange={() => toggleSelection(track.id)} />
+                                        </td>
                                         <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
                                             <div className="p-2 bg-gray-100 rounded-lg">
                                                 <FileAudio className="w-4 h-4 text-gray-500" />
@@ -137,6 +181,75 @@ export function Dashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Nuke Bar */}
+            {selectedTracks.length > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)] z-40 animate-in slide-in-from-bottom-5">
+                    <div className="max-w-5xl mx-auto w-full flex justify-between items-center px-6">
+                        <span className="font-medium text-gray-800">
+                            <span className="bg-blue-100 text-blue-700 py-1 px-2.5 rounded-full text-sm mr-2">{selectedTracks.length}</span>
+                            faixa{selectedTracks.length > 1 ? 's' : ''} selecionada{selectedTracks.length > 1 ? 's' : ''}
+                        </span>
+                        <div className="flex gap-4">
+                            <button onClick={() => setSelectedTracks([])} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors cursor-pointer">
+                                Cancelar
+                            </button>
+                            <button onClick={() => setIsDeleteModalOpen(true)} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition-colors cursor-pointer">
+                                <Trash2 className="w-4 h-4" /> Deletar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* AWS Delete Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="bg-red-50 border-b border-red-100 p-6 text-center text-red-600 relative">
+                            <button onClick={() => setIsDeleteModalOpen(false)} className="absolute top-4 right-4 text-red-400 hover:text-red-700 cursor-pointer">
+                                <X className="w-5 h-5" />
+                            </button>
+                            <div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-xl font-bold">Zona de Perigo</h2>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-gray-700 mb-6 font-medium leading-relaxed">
+                                Você está prestes a apagar <strong>{selectedTracks.length} faixa{selectedTracks.length > 1 ? 's' : ''}</strong> permanentemente da base de dados e deitar os arquivos originais (.mp3/.wav) no lixo. Essa ação <span className="underline decoration-red-500 font-bold">NÃO pode ser desfeita</span>.
+                            </p>
+
+                            <label className="block text-sm text-gray-600 font-medium mb-2">
+                                Para confirmar, digite <span className="bg-gray-100 text-gray-800 font-mono px-1.5 py-0.5 rounded user-select-all">deletar</span> no campo abaixo:
+                            </label>
+                            <input
+                                type="text"
+                                value={deleteInput}
+                                onChange={e => setDeleteInput(e.target.value)}
+                                className="w-full border-2 border-gray-200 rounded-lg p-3 outline-none focus:border-red-500 focus:ring-4 focus:ring-red-50 transition-all font-mono text-center tracking-widest text-lg text-gray-800"
+                                placeholder="digite aqui..."
+                            />
+
+                            <div className="flex gap-3 mt-8">
+                                <button
+                                    onClick={() => { setIsDeleteModalOpen(false); setDeleteInput(""); }}
+                                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors cursor-pointer"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleBulkDelete}
+                                    disabled={deleteInput !== "deletar" || isDeleting}
+                                    className={`flex-1 py-3 font-bold rounded-xl transition-all ${deleteInput === "deletar" && !isDeleting ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30 cursor-pointer' : 'bg-red-100 text-red-300 cursor-not-allowed'}`}
+                                >
+                                    {isDeleting ? 'Nuking...' : 'Confirmar Exclusão'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

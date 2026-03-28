@@ -18,7 +18,7 @@
 - [x] Tarefa 3.1: Dashboard Principal (Listagem e Upload).
 - [x] Tarefa 3.2: Sincronização e Player de Áudio.Wavesurfer.js e Visualização.
 - [x] Tarefa 3.3: Editor de Trechos com "Play Local" (Sincronia).
-- [ ] Tarefa 3.4: Fluxo de Deleção Segura (Padrão AWS)
+- [x] Tarefa 3.4: Fluxo de Deleção Segura (Padrão AWS)
 - [ ] Tarefa 3.5: Paginação e Busca Global
 - [ ] Tarefa 3.6: Modo Karaoke (Visualização)
 > **GATE DE QUALIDADE:** Clicar no texto e ouvir o trecho exato no áudio.
