@@ -31,8 +31,32 @@ def process_transcription(music_id: str):
             whisper_result = WhisperResult(**result_dict)
             
             if not whisper_result.segments or whisper_result.probability < 0.35:
+                if music.vocal_isolation_attempted:
+                    logger.warning(f"Vocals already isolated for {music_id}, but confidence is still low ({whisper_result.probability}). Marking FAILED.")
+                    music.status = MusicStatus.FAILED
+                    session.add(music)
+                    session.commit()
+                    return
+                
                 music.status = MusicStatus.ISOLATING_VOCALS
+                music.vocal_isolation_attempted = True
+                session.add(music)
+                session.commit()
                 logger.info(f"Low confidence ({whisper_result.probability}). Diverting {music_id} to ISOLATING_VOCALS.")
+                
+                # Engatilha pipeline de isolamento com Demucs
+                from app.services.demucs_service import DemucsService
+                demucs = DemucsService()
+                vocals_absolute_path = demucs.separate_vocals(audio_path)
+                
+                relative_vocals_path = os.path.relpath(vocals_absolute_path, os.getcwd())
+                music.audio_path = relative_vocals_path
+                session.add(music)
+                session.commit()
+                
+                # Dispara a transcrição remotamente outra vez com novo audio base
+                return process_transcription(str(music_id))
+                
             else:
                 music.raw_transcription = whisper_result.model_dump_json() # Validate and Serialize
                 music.status = MusicStatus.PROCESSING_FORMATTING

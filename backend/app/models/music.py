@@ -27,6 +27,7 @@ class Music(SQLModel, table=True):
     filename: str
     status: MusicStatus = Field(default=MusicStatus.PENDING)
     audio_path: str
+    vocal_isolation_attempted: bool = Field(default=False)
     raw_transcription: Optional[str] = None
     formatted_transcription: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
