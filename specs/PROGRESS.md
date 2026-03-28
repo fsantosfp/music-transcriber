@@ -14,8 +14,8 @@
 > **GATE DE QUALIDADE:** Processar áudio de teste e verificar JSON (segments + letra).
 
 ## Milestone 3: A Experiência (UI & Edição)
-- [ ] Tarefa 3.1: Dashboard de Acompanhamento (Polling no Front).
-- [ ] Tarefa 3.2: Player Wavesurfer.js e Visualização.
+- [x] Tarefa 3.1: Dashboard Principal (Listagem e Upload).
+- [x] Tarefa 3.2: Sincronização e Player de Áudio.Wavesurfer.js e Visualização.
 - [ ] Tarefa 3.3: Editor de Trechos com "Play Local" (Sincronia).
 > **GATE DE QUALIDADE:** Clicar no texto e ouvir o trecho exato no áudio.
 
