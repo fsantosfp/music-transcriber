@@ -169,6 +169,15 @@ def export_music_lyrics(music_id: uuid.UUID, format: str = "txt", session: Sessi
         c.setFont("Helvetica", 12)
         y = 720
         for line in text.split('\n'):
+            line = line.strip('\r')
+            if not line.strip():
+                y -= 15
+                if y < 72:
+                    c.showPage()
+                    c.setFont("Helvetica", 12)
+                    y = 750
+                continue
+                
             wrapped_lines = simpleSplit(line, "Helvetica", 12, 450)
             for wrapped in wrapped_lines:
                 if y < 72:
