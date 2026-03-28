@@ -3,3 +3,10 @@ uvicorn
 sqlmodel
 pytest
 httpx
+python-multipart
+aiofiles
+faster-whisper
+google-genai
+demucs
+python-docx
+reportlab

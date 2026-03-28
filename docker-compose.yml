@@ -9,10 +9,19 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - sqlite_data:/app/data
-      - ./uploads:/app/uploads
     environment:
       - DATABASE_URL=sqlite:////app/data/music.sqlite3
+    env_file:
+      - .env
 
-volumes:
-  sqlite_data:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
