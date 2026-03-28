@@ -69,13 +69,17 @@ export function MusicViewer() {
         }
     };
 
-    const handleDownloadRaw = () => {
-        if (!track || !track.raw_transcription) return;
-        const blob = new Blob([track.raw_transcription], { type: 'text/plain' });
+    const handleDownloadLyrics = () => {
+        if (!track) return;
+        // Fallback to raw if formatted is not available
+        const exportText = track.formatted_transcription || track.raw_transcription;
+        if (!exportText) return;
+
+        const blob = new Blob([exportText], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `raw_${track.filename}.txt`;
+        a.download = `${track.filename}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -116,13 +120,13 @@ export function MusicViewer() {
                         </div>
                     </div>
 
-                    {track.raw_transcription && (
+                    {(track.formatted_transcription || track.raw_transcription) && (
                         <button
-                            onClick={handleDownloadRaw}
+                            onClick={handleDownloadLyrics}
                             className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer"
                         >
                             <Download className="w-4 h-4" />
-                            Baixar Log
+                            Baixar Letra
                         </button>
                     )}
                 </div>
