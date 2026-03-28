@@ -73,3 +73,13 @@ async def upload_music_file(background_tasks: BackgroundTasks, file: UploadFile 
         raise HTTPException(status_code=500, detail="Failed to persist record in database")
 
     return music_record
+
+@router.get("/{music_id}", response_model=Music)
+def get_music_status(music_id: uuid.UUID, session: Session = Depends(get_session)):
+    """
+    Retrieve the current status and transcriptions of a specific music upload.
+    """
+    music = session.get(Music, music_id)
+    if not music:
+        raise HTTPException(status_code=404, detail="Music not found")
+    return music
