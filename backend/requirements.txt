@@ -8,3 +8,5 @@ aiofiles
 faster-whisper
 google-genai
 demucs
+python-docx
+reportlab

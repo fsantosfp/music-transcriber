@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import WaveSurfer from 'wavesurfer.js';
 import { type MusicTrack } from './Dashboard';
-import { Play, Pause, ArrowLeft, Download, Volume2, Music as MusicIcon, Edit3, Save, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, ArrowLeft, Volume2, Music as MusicIcon, Edit3, Save, CheckCircle2 } from 'lucide-react';
 
 export function MusicViewer() {
     const { id } = useParams();
@@ -155,21 +155,9 @@ export function MusicViewer() {
         }
     };
 
-    const handleDownloadLyrics = () => {
+    const handleDownloadFormat = (format: string) => {
         if (!track) return;
-        // Fallback to raw if formatted is not available
-        const exportText = track.formatted_transcription || track.raw_transcription;
-        if (!exportText) return;
-
-        const blob = new Blob([exportText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${track.filename}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        window.open(`http://localhost:8000/api/v1/music/${track.id}/export?format=${format}`, '_blank');
     };
 
     if (loading && !track) {
@@ -217,13 +205,29 @@ export function MusicViewer() {
                             </button>
                         )}
                         {(track.formatted_transcription || track.raw_transcription) && (
-                            <button
-                                onClick={handleDownloadLyrics}
-                                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer"
-                            >
-                                <Download className="w-4 h-4" />
-                                Baixar Letra
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleDownloadFormat('txt')}
+                                    className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                                    title="Baixar Texto Simples (.txt)"
+                                >
+                                    TXT
+                                </button>
+                                <button
+                                    onClick={() => handleDownloadFormat('docx')}
+                                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                                    title="Baixar para Word (.docx)"
+                                >
+                                    DOCX
+                                </button>
+                                <button
+                                    onClick={() => handleDownloadFormat('pdf')}
+                                    className="inline-flex items-center gap-2 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                                    title="Baixar PDF Seguro (.pdf)"
+                                >
+                                    PDF
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
