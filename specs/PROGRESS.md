@@ -20,5 +20,5 @@
 > **GATE DE QUALIDADE:** Clicar no texto e ouvir o trecho exato no áudio.
 
 ## Milestone 4: Entrega Final
-- [ ] Tarefa 4.1: Exportação (TXT, PDF, DOCX).
-> **GATE DE QUALIDADE:** Gerar PDF e validar formatação da letra.
+- [x] Tarefa 4.1: Exportação Final (Letras Formatas) - Download .txt, .docx, .pdf
+> **GATE DE QUALIDADE:** Validar se os arquivos binários gerados estão limpos, legíveis e formatados pela IA.

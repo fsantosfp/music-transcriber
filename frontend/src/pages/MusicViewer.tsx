@@ -18,6 +18,7 @@ export function MusicViewer() {
     const [isSaving, setIsSaving] = useState(false);
     const [savedNotice, setSavedNotice] = useState(false);
     const [playingSegment, setPlayingSegment] = useState<number | null>(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const waveformRef = useRef<HTMLDivElement>(null);
     const wavesurfer = useRef<WaveSurfer | null>(null);
@@ -155,21 +156,9 @@ export function MusicViewer() {
         }
     };
 
-    const handleDownloadLyrics = () => {
+    const handleDownloadFormat = (format: string) => {
         if (!track) return;
-        // Fallback to raw if formatted is not available
-        const exportText = track.formatted_transcription || track.raw_transcription;
-        if (!exportText) return;
-
-        const blob = new Blob([exportText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${track.filename}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        window.open(`http://localhost:8000/api/v1/music/${track.id}/export?format=${format}`, '_blank');
     };
 
     if (loading && !track) {
@@ -217,13 +206,44 @@ export function MusicViewer() {
                             </button>
                         )}
                         {(track.formatted_transcription || track.raw_transcription) && (
-                            <button
-                                onClick={handleDownloadLyrics}
-                                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer"
-                            >
-                                <Download className="w-4 h-4" />
-                                Baixar Letra
-                            </button>
+                            <div className="relative">
+                                <div className="inline-flex rounded-lg shadow-sm">
+                                    <button
+                                        onClick={() => handleDownloadFormat('txt')}
+                                        className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-l-lg transition-colors border-r-0 cursor-pointer"
+                                        title="Baixar Texto Simples (.txt)"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Baixar Letra
+                                    </button>
+                                    <button
+                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                        className="inline-flex items-center px-2 py-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-r-lg transition-colors cursor-pointer"
+                                        title="Mais opções de formato"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {isDropdownOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                                        <button
+                                            onClick={() => { handleDownloadFormat('pdf'); setIsDropdownOpen(false); }}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2 font-medium"
+                                        >
+                                            Exportar como PDF
+                                        </button>
+                                        <button
+                                            onClick={() => { handleDownloadFormat('docx'); setIsDropdownOpen(false); }}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2 font-medium"
+                                        >
+                                            Exportar Word (.docx)
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

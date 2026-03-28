@@ -1,14 +1,12 @@
 import os
+import io
 import uuid
 import re
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from sqlmodel import Session
 from app.core.db import engine
-from app.models.music import Music, MusicStatus
-from app.core.config import MAX_UPLOAD_SIZE_MB
-import aiofiles
-from app.tasks.transcription import process_transcription
-from app.models.music import MusicUpdate
+from app.models.music import Music, MusicStatus, MusicUpdate
 
 router = APIRouter()
 
@@ -122,3 +120,75 @@ def update_music(music_id: uuid.UUID, music_update: MusicUpdate, session: Sessio
     session.commit()
     session.refresh(db_music)
     return db_music
+
+@router.get("/{music_id}/export")
+def export_music_lyrics(music_id: uuid.UUID, format: str = "txt", session: Session = Depends(get_session)):
+    """
+    Generate physical files representing the final transcription.
+    """
+    music = session.get(Music, music_id)
+    if not music:
+        raise HTTPException(status_code=404, detail="Music not found")
+        
+    text = music.formatted_transcription or music.raw_transcription or "Letra não disponível"
+    
+    if format == "txt":
+        buffer = io.BytesIO()
+        buffer.write(text.encode("utf-8"))
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="text/plain", headers={"Content-Disposition": f"attachment; filename={music.filename}.txt"})
+        
+    elif format == "docx":
+        try:
+            from docx import Document
+        except ImportError:
+            raise HTTPException(status_code=500, detail="python-docx is not installed")
+            
+        doc = Document()
+        doc.add_heading(f"Letra: {music.filename}", 0)
+        doc.add_paragraph(text)
+        
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers={"Content-Disposition": f"attachment; filename={music.filename}.docx"})
+        
+    elif format == "pdf":
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+            from reportlab.lib.utils import simpleSplit
+        except ImportError:
+            raise HTTPException(status_code=500, detail="reportlab is not installed")
+            
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(72, 750, f"Letra: {music.filename}")
+        
+        c.setFont("Helvetica", 12)
+        y = 720
+        for line in text.split('\n'):
+            line = line.strip('\r')
+            if not line.strip():
+                y -= 15
+                if y < 72:
+                    c.showPage()
+                    c.setFont("Helvetica", 12)
+                    y = 750
+                continue
+                
+            wrapped_lines = simpleSplit(line, "Helvetica", 12, 450)
+            for wrapped in wrapped_lines:
+                if y < 72:
+                    c.showPage()
+                    c.setFont("Helvetica", 12)
+                    y = 750
+                c.drawString(72, y, wrapped)
+                y -= 15
+        
+        c.save()
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename={music.filename}.pdf"})
+        
+    raise HTTPException(status_code=400, detail="Invalid format requested. Valid formats: txt, docx, pdf.")
