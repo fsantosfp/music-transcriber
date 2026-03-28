@@ -61,3 +61,30 @@ Caso a transcrição, isolamento ou formatação estejam rolando, os atributos `
   "created_at": "2026-03-27T21:06:29.691330"
 }
 ```
+
+### 3. Reprocessamento (Retry)
+Caso um áudio sofra falhas ou haja desejo de recomeçar a pipeline do zero utilizando exatamente o mesmo arquivo físico armazenado isoladamente no HD.
+
+**POST** `/api/v1/music/{music_id}/retry`
+
+#### Retorno Esperado
+Zera os metadados textuais extraídos da IA no SQLite e acorda o `BackgroundTasks` para reativar as extrações.
+```json
+{
+  "id": "3cb2b0b6-...",
+  "status": "PENDING",
+  "vocal_isolation_attempted": false,
+  "raw_transcription": null,
+  "formatted_transcription": null
+}
+```
+
+### 4. Exportação Binária Multi-formato
+Rotas construídas nativamente com os parsers Python (`reportlab` e `python-docx`) para despejar na RAM (sem uso excessivo de HD) o cache processado na extensão exata.
+
+**GET** `/api/v1/music/{music_id}/export?format={tipo}`
+Parâmetros Formato (`format`):
+- `txt`: Texto ASCII purista
+- `docx`: Arquivos editáveis em MS Word.
+- `pdf`: Vetores Helvetica A4 prontos para impressão.
+Retorna uma `StreamingResponse` mapeada diretamente ao Blob do navegador (`Content-Disposition: attachment`).
