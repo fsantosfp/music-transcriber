@@ -8,6 +8,7 @@ from app.models.music import Music, MusicStatus
 from app.core.config import MAX_UPLOAD_SIZE_MB
 import aiofiles
 from app.tasks.transcription import process_transcription
+from app.models.music import MusicUpdate
 
 router = APIRouter()
 
@@ -92,3 +93,32 @@ def list_all_music(session: Session = Depends(get_session)):
     from sqlmodel import select
     statement = select(Music).order_by(Music.created_at.desc())
     return session.exec(statement).all()
+
+@router.patch("/{music_id}", response_model=Music)
+def update_music(music_id: uuid.UUID, music_update: MusicUpdate, session: Session = Depends(get_session)):
+    """
+    Apply targeted overwrites to properties of an already instantiated upload.
+    Mainly utilized for front-end generic saves on JSON Segment Arrays.
+    """
+    db_music = session.get(Music, music_id)
+    if not db_music:
+        raise HTTPException(status_code=404, detail="Music not found")
+        
+    update_data = music_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_music, key, value)
+        
+    # Se o raw_transcription foi atualizado pelo editor, refazemos a formatacao LLM com os dados novos.
+    if "raw_transcription" in update_data and update_data["raw_transcription"] is not None:
+        from app.services.llm_service import LLMService
+        llm_service = LLMService()
+        try:
+            formatted_text = llm_service.format_transcription(update_data["raw_transcription"])
+            db_music.formatted_transcription = formatted_text
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to rebuild formatted transcription from AI: {str(e)}")
+        
+    session.add(db_music)
+    session.commit()
+    session.refresh(db_music)
+    return db_music
