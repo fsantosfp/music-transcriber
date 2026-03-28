@@ -41,3 +41,23 @@ Imediatamente após o upload (resposta `201 Created`), a API lança um pipeline 
 2. **Formatação Semântica (`PROCESSING_FORMATTING`)**: A transcrição integral avança instantaneamente para o Gemini 2.5 Flash, alimentada por um extenso System Prompt encarregado de injetar estéticas musicais rigorosas (refrões, capitalizações, junção dos versos, reticências de fade out, etc). Este produto é consolidado em alto nível dentro de `formatted_transcription`.
 
 Somente após esta última devolutiva, o status atinge definitivamente o ponto de `COMPLETED`.
+
+### 2. Status e Polling
+Como as APIs de orquestração de Inteligência Artificial rodam em fila nos processos assíncronos (`BackgroundTasks`), a tela do Front-end deve consultar periodicamente o andamento da requisição disparada pelo ID devolvido.
+
+**GET** `/api/v1/music/{music_id}`
+
+#### Retorno Esperado
+Caso a transcrição, isolamento ou formatação estejam rolando, os atributos `raw_transcription` e `formatted_transcription` virão vazios. Assim que o processamento terminar, as letras textuais estarão embutidas e o `status` atingirá `COMPLETED`. Retorna **404** se UUID não existir.
+```json
+{
+  "id": "3cb2b0b6-f8bc-4dce-adcd-6e412dfa00e9",
+  "filename": "meu_audio_sanitizado.mp3",
+  "status": "COMPLETED",
+  "audio_path": "uploads/3cb2b0b6-...-meu_audio.mp3",
+  "vocal_isolation_attempted": false,
+  "raw_transcription": "{\"segments\":[{\"start\": 0.0, ...]",
+  "formatted_transcription": "Is this the real life? Is this just fantasy?\nCaught in a landslide...",
+  "created_at": "2026-03-27T21:06:29.691330"
+}
+```
