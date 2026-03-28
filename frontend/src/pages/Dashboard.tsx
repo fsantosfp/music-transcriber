@@ -10,6 +10,8 @@ export interface MusicTrack {
     status: MusicStatusType;
     audio_path: string;
     created_at: string;
+    raw_transcription?: string;
+    formatted_transcription?: string;
 }
 
 export function Dashboard() {
