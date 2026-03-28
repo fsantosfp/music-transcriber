@@ -83,3 +83,12 @@ def get_music_status(music_id: uuid.UUID, session: Session = Depends(get_session
     if not music:
         raise HTTPException(status_code=404, detail="Music not found")
     return music
+
+@router.get("/", response_model=list[Music])
+def list_all_music(session: Session = Depends(get_session)):
+    """
+    List all uploaded music tracks, ordered by newest first.
+    """
+    from sqlmodel import select
+    statement = select(Music).order_by(Music.created_at.desc())
+    return session.exec(statement).all()
