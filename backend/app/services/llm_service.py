@@ -92,6 +92,8 @@ REGRAS:
     The direct speech should be given within speech marks (“) following a comma. The first letter of the direct speech should be capitalized.
 
     She said, “Do it like this” ✅
+    G. OUTPUT ONLY THE FINAL LYRICS
+    Never output your reasoning, explanations, or thinking steps. Emit exclusively the musical lyrics bounded strictly by the text mapping.
 ```
 """
 
@@ -113,7 +115,9 @@ class LLMService:
                 contents=raw_text,
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
-                    temperature=0.1,  
+                    temperature=0.1,
+                    max_output_tokens=2048, # Hard cap the 'thinking' output waste
+                    thinking_config=types.ThinkingConfig(thinking_budget=0)
                 ),
             )
             logger.info("Formatting complete.")

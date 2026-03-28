@@ -10,7 +10,13 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
 
+from fastapi.staticfiles import StaticFiles
+import os
+
 app = FastAPI(title="Music Transcriber MVP", lifespan=lifespan)
+
+os.makedirs("/app/uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="/app/uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

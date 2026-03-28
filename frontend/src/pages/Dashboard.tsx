@@ -10,6 +10,8 @@ export interface MusicTrack {
     status: MusicStatusType;
     audio_path: string;
     created_at: string;
+    raw_transcription?: string;
+    formatted_transcription?: string;
 }
 
 export function Dashboard() {
@@ -105,9 +107,9 @@ export function Dashboard() {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             {track.status === 'COMPLETED' ? (
-                                                <button className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-bold tracking-tight cursor-pointer">
+                                                <Link to={`/music/${track.id}`} className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-bold tracking-tight cursor-pointer">
                                                     Abrir Letra <ChevronRight className="w-4 h-4" />
-                                                </button>
+                                                </Link>
                                             ) : (
                                                 <span className="text-gray-300 inline-flex items-center gap-1 font-medium cursor-not-allowed">
                                                     Aguarde Processamento...
