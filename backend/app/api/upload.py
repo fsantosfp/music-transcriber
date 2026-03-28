@@ -7,6 +7,9 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import Session
 from app.core.db import engine
 from app.models.music import Music, MusicStatus, MusicUpdate
+from app.core.config import MAX_UPLOAD_SIZE_MB
+import aiofiles
+from app.tasks.transcription import process_transcription
 
 router = APIRouter()
 
@@ -192,3 +195,59 @@ def export_music_lyrics(music_id: uuid.UUID, format: str = "txt", session: Sessi
         return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename={music.filename}.pdf"})
         
     raise HTTPException(status_code=400, detail="Invalid format requested. Valid formats: txt, docx, pdf.")
+
+@router.post("/{music_id}/retry", response_model=Music)
+def retry_music_processing(music_id: uuid.UUID, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
+    """
+    Cleans up any previous transcriptions or fallback counters, resetting the pipeline completely
+    while aggressively reusing the physical media file uploaded beforehand.
+    """
+    music = session.get(Music, music_id)
+    if not music:
+        raise HTTPException(status_code=404, detail="Music not found")
+        
+    music.status = MusicStatus.PENDING
+    music.raw_transcription = None
+    music.formatted_transcription = None
+    music.vocal_isolation_attempted = False
+    
+    session.add(music)
+    session.commit()
+    session.refresh(music)
+    
+    # Restart the workflow from scratch
+    background_tasks.add_task(process_transcription, str(music.id))
+    return music
+
+@router.delete("/{music_id}", status_code=204)
+def delete_music(music_id: uuid.UUID, session: Session = Depends(get_session)):
+    """
+    Safely purges the database record alongside all physical media (Original and Vocal stems) from the /uploads folder.
+    """
+    music = session.get(Music, music_id)
+    if not music:
+        raise HTTPException(status_code=404, detail="Music not found")
+        
+    base_dir = "/app"
+    
+    # 1. Attempt to remove original audio
+    if music.audio_path:
+        full_audio_path = os.path.join(base_dir, music.audio_path)
+        try:
+            if os.path.exists(full_audio_path):
+                os.remove(full_audio_path)
+        except Exception as e:
+            print(f"Failed to delete original audio file {full_audio_path}: {e}")
+            
+    # 2. Attempt to remove isolated vocal traces
+    vocal_path = os.path.join(base_dir, "uploads", f"{music.id}_vocals.wav")
+    try:
+        if os.path.exists(vocal_path):
+            os.remove(vocal_path)
+    except Exception as e:
+        print(f"Failed to delete vocal traces {vocal_path}: {e}")
+        
+    # 3. Nuke from SQLite
+    session.delete(music)
+    session.commit()
+    return None
