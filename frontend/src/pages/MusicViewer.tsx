@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import WaveSurfer from 'wavesurfer.js';
 import { type MusicTrack } from './Dashboard';
-import { Play, Pause, ArrowLeft, Volume2, Music as MusicIcon, Edit3, Save, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, ArrowLeft, Download, Volume2, Music as MusicIcon, Edit3, Save, CheckCircle2 } from 'lucide-react';
 
 export function MusicViewer() {
     const { id } = useParams();
@@ -18,6 +18,7 @@ export function MusicViewer() {
     const [isSaving, setIsSaving] = useState(false);
     const [savedNotice, setSavedNotice] = useState(false);
     const [playingSegment, setPlayingSegment] = useState<number | null>(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const waveformRef = useRef<HTMLDivElement>(null);
     const wavesurfer = useRef<WaveSurfer | null>(null);
@@ -205,28 +206,43 @@ export function MusicViewer() {
                             </button>
                         )}
                         {(track.formatted_transcription || track.raw_transcription) && (
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => handleDownloadFormat('txt')}
-                                    className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
-                                    title="Baixar Texto Simples (.txt)"
-                                >
-                                    TXT
-                                </button>
-                                <button
-                                    onClick={() => handleDownloadFormat('docx')}
-                                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
-                                    title="Baixar para Word (.docx)"
-                                >
-                                    DOCX
-                                </button>
-                                <button
-                                    onClick={() => handleDownloadFormat('pdf')}
-                                    className="inline-flex items-center gap-2 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
-                                    title="Baixar PDF Seguro (.pdf)"
-                                >
-                                    PDF
-                                </button>
+                            <div className="relative">
+                                <div className="inline-flex rounded-lg shadow-sm">
+                                    <button
+                                        onClick={() => handleDownloadFormat('txt')}
+                                        className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-l-lg transition-colors border-r-0 cursor-pointer"
+                                        title="Baixar Texto Simples (.txt)"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Baixar Letra
+                                    </button>
+                                    <button
+                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                        className="inline-flex items-center px-2 py-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-r-lg transition-colors cursor-pointer"
+                                        title="Mais opções de formato"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {isDropdownOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                                        <button
+                                            onClick={() => { handleDownloadFormat('pdf'); setIsDropdownOpen(false); }}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2 font-medium"
+                                        >
+                                            Exportar como PDF
+                                        </button>
+                                        <button
+                                            onClick={() => { handleDownloadFormat('docx'); setIsDropdownOpen(false); }}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2 font-medium"
+                                        >
+                                            Exportar Word (.docx)
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
