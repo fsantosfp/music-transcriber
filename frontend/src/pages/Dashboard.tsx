@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { StatusBadge, type MusicStatusType } from '../components/StatusBadge';
-import { FileAudio, ChevronRight, Upload, RotateCcw, Trash2, AlertTriangle, X } from 'lucide-react';
+import { FileAudio, ChevronRight, Upload, RotateCcw, Trash2, AlertTriangle, X, Search, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export interface MusicTrack {
@@ -22,10 +22,26 @@ export function Dashboard() {
     const [deleteInput, setDeleteInput] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setPage(1); // Reset page on new search
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
+
     const fetchTracks = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/api/v1/music/');
-            setTracks(response.data);
+            const response = await axios.get(`http://localhost:8000/api/v1/music/?page=${page}&size=10&q=${debouncedSearch}`);
+            setTracks(response.data.items);
+            setTotalPages(response.data.pages);
+            setTotalItems(response.data.total);
             setLoading(false);
         } catch (error) {
             console.error("Error fetching tracks:", error);
@@ -35,7 +51,7 @@ export function Dashboard() {
 
     useEffect(() => {
         fetchTracks();
-    }, []);
+    }, [page, debouncedSearch]);
 
     const handleRetry = async (id: string) => {
         try {
@@ -104,16 +120,29 @@ export function Dashboard() {
     }
 
     return (
-        <div className="w-full max-w-5xl mx-auto py-10 px-6">
-            <div className="flex items-center justify-between mb-8">
+        <div className="w-full max-w-5xl mx-auto py-10 px-6 pb-28">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Transcrições de Letras</h1>
                     <p className="text-gray-500 mt-1">Acompanhe o processamento do pipeline de inteligência artificial.</p>
                 </div>
-                <Link to="/upload" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-sm font-medium transition-transform active:scale-95">
-                    <Upload className="w-4 h-4" />
-                    Nova Música
-                </Link>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar música ou letra..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        />
+                    </div>
+                    <Link to="/upload" className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-sm font-medium transition-transform active:scale-95 shrink-0">
+                        <Upload className="w-4 h-4" />
+                        Nova Música
+                    </Link>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -181,6 +210,31 @@ export function Dashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-200">
+                    <span className="text-sm text-gray-500 font-medium">
+                        Mostrando página <strong className="text-gray-900">{page}</strong> de <strong className="text-gray-900">{totalPages}</strong> ({totalItems} registros)
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                            <ChevronLeft className="w-4 h-4" /> Anterior
+                        </button>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                            className="bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                            Próxima <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Nuke Bar */}
             {selectedTracks.length > 0 && (
