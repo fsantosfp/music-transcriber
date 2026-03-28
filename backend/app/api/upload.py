@@ -1,12 +1,13 @@
 import os
 import uuid
 import re
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks
 from sqlmodel import Session
 from app.core.db import engine
 from app.models.music import Music, MusicStatus
 from app.core.config import MAX_UPLOAD_SIZE_MB
 import aiofiles
+from app.tasks.transcription import process_transcription
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ def get_session():
         yield session
 
 @router.post("/upload", status_code=201, response_model=Music)
-async def upload_music_file(file: UploadFile = File(...), session: Session = Depends(get_session)):
+async def upload_music_file(background_tasks: BackgroundTasks, file: UploadFile = File(...), session: Session = Depends(get_session)):
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Unsupported file format. Allowed: {ALLOWED_EXTENSIONS}")
@@ -61,6 +62,10 @@ async def upload_music_file(file: UploadFile = File(...), session: Session = Dep
         session.add(music_record)
         session.commit()
         session.refresh(music_record)
+        
+        # Dispara processo de transcrição em 2o plano
+        background_tasks.add_task(process_transcription, str(music_record.id))
+        
     except Exception as e:
         if os.path.exists(file_path_disk):
             os.remove(file_path_disk)
