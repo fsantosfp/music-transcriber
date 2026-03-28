@@ -10,7 +10,7 @@
 - [x] Tarefa 2.1: Integração com Faster-Whisper para transcrição bruta.
 - [x] Tarefa 2.2: Formatação via LLM (System Prompt).
 - [x] Tarefa 2.3: Fallback com Demucs (Isolamento de Vocal).
-- [ ] Tarefa 2.4: Endpoint de Status (Polling).
+- [x] Tarefa 2.4: Endpoint de Status (Polling).
 > **GATE DE QUALIDADE:** Processar áudio de teste e verificar JSON (segments + letra).
 
 ## Milestone 3: A Experiência (UI & Edição)

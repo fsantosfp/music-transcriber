@@ -58,3 +58,24 @@ def test_ct_03_payload_too_large(monkeypatch):
     
     assert response.status_code == 413
     assert "Payload Too Large" in response.json()["detail"]
+
+def test_ct_06_get_music_status():
+    file_content = b"fake mp3 content" * 1024
+    files = {"file": ("test_status.mp3", file_content, "audio/mpeg")}
+    upload_response = client.post("/api/v1/music/upload", files=files)
+    assert upload_response.status_code == 201
+    music_id = upload_response.json()["id"]
+    
+    get_response = client.get(f"/api/v1/music/{music_id}")
+    assert get_response.status_code == 200
+    data = get_response.json()
+    assert data["id"] == music_id
+    assert data["status"] in ["PENDING", "PROCESSING_WHISPER", "FAILED"]
+    assert data["filename"] == "test_status.mp3"
+
+def test_ct_07_get_music_not_found():
+    import uuid
+    fake_id = str(uuid.uuid4())
+    get_response = client.get(f"/api/v1/music/{fake_id}")
+    assert get_response.status_code == 404
+    assert "Music not found" in get_response.json()["detail"]
