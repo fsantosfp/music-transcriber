@@ -217,7 +217,7 @@ export function Dashboard() {
                         </div>
                         <div className="p-6">
                             <p className="text-gray-700 mb-6 font-medium leading-relaxed">
-                                Você está prestes a apagar <strong>{selectedTracks.length} faixa{selectedTracks.length > 1 ? 's' : ''}</strong> permanentemente da base de dados e deitar os arquivos originais (.mp3/.wav) no lixo. Essa ação <span className="underline decoration-red-500 font-bold">NÃO pode ser desfeita</span>.
+                                Você está prestes a apagar <strong>{selectedTracks.length} faixa{selectedTracks.length > 1 ? 's' : ''}</strong> permanentemente da base de dados e mandar os arquivos originais (.mp3/.wav) para o lixo. Essa ação <span className="underline decoration-red-500 font-bold">NÃO pode ser desfeita</span>.
                             </p>
 
                             <label className="block text-sm text-gray-600 font-medium mb-2">
