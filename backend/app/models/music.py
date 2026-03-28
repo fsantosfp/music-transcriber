@@ -31,3 +31,7 @@ class Music(SQLModel, table=True):
     raw_transcription: Optional[str] = None
     formatted_transcription: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class MusicUpdate(SQLModel):
+    raw_transcription: Optional[str] = None
+    formatted_transcription: Optional[str] = None
