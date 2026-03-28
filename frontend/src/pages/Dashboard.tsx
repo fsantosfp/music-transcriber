@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { StatusBadge, type MusicStatusType } from '../components/StatusBadge';
-import { FileAudio, ChevronRight, Upload } from 'lucide-react';
+import { FileAudio, ChevronRight, Upload, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export interface MusicTrack {
@@ -32,6 +32,16 @@ export function Dashboard() {
     useEffect(() => {
         fetchTracks();
     }, []);
+
+    const handleRetry = async (id: string) => {
+        try {
+            await axios.post(`http://localhost:8000/api/v1/music/${id}/retry`);
+            fetchTracks();
+        } catch (error) {
+            console.error("Error retrying track:", error);
+            alert("Erro ao tentar reprocessar o áudio.");
+        }
+    };
 
     useEffect(() => {
         // Escaneia tracks que exigem polling
@@ -110,6 +120,10 @@ export function Dashboard() {
                                                 <Link to={`/music/${track.id}`} className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-bold tracking-tight cursor-pointer">
                                                     Abrir Letra <ChevronRight className="w-4 h-4" />
                                                 </Link>
+                                            ) : track.status === 'FAILED' ? (
+                                                <button onClick={() => handleRetry(track.id)} className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-bold tracking-tight cursor-pointer transition-colors hover:bg-red-50 px-3 py-1.5 rounded-lg">
+                                                    <RotateCcw className="w-4 h-4" /> Tentar Novamente
+                                                </button>
                                             ) : (
                                                 <span className="text-gray-300 inline-flex items-center gap-1 font-medium cursor-not-allowed">
                                                     Aguarde Processamento...
