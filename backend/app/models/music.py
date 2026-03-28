@@ -11,6 +11,16 @@ class MusicStatus(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
+class TranscriptionSegment(SQLModel):
+    start: float
+    end: float
+    text: str
+
+class WhisperResult(SQLModel):
+    segments: list[TranscriptionSegment]
+    language: str
+    probability: float
+
 class Music(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     filename: str

@@ -7,7 +7,7 @@
 > **GATE DE QUALIDADE:** Validar se o áudio aparece na pasta /uploads e no banco.
 
 ## Milestone 2: O Cérebro (Pipeline de IA)
-- [ ] Tarefa 2.1: Integração Faster-Whisper (Transcrição Bruta).
+- [x] Tarefa 2.1: Integração com Faster-Whisper para transcrição bruta.
 - [ ] Tarefa 2.2: Formatação via LLM (System Prompt).
 - [ ] Tarefa 2.3: Fallback com Demucs (Isolamento de Vocal).
 - [ ] Tarefa 2.4: Endpoint de Status (Polling).
