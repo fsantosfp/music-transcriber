@@ -11,6 +11,8 @@ services:
       - ./backend:/app
     environment:
       - DATABASE_URL=sqlite:////app/data/music.sqlite3
+    env_file:
+      - .env
 
   frontend:
     build:

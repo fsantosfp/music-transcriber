@@ -35,8 +35,9 @@ O áudio recebido terá o nome original sanitizado e mesclado a um UUID único e
 }
 ```
 
-#### Processamento em Segundo Plano (Background Task)
-Imediatamente após o upload (resposta `201 Created`), a API inicia a transcrição do áudio utilizando a IA `faster-whisper` assincronamente.
-Durante o processamento, o `status` do registro evolui para `PROCESSING_WHISPER`.
-- Quando finalizado com sucesso (confiança > 35%), o JSON com o texto e os *timestamps* é salvo em `raw_transcription` e o status passa para `COMPLETED`. 
-- Caso a probabilidade detectada seja baixa (abaixo de 35%, indicando possível ruído ou apenas instrumental), o status será modificado para o fallback `ISOLATING_VOCALS`.
+#### Processamento de IA (Background Tasks)
+Imediatamente após o upload (resposta `201 Created`), a API lança um pipeline em duas fases assíncronas sequenciais:
+1. **Transcrição Base (`PROCESSING_WHISPER`)**: Extração temporal via IA local em Python *faster-whisper*. O resultado bruto é mapeado no atributo temporal `raw_transcription`. (Fallback alternativo é acionado somente sob confidence de áudio inferior a 35%).
+2. **Formatação Semântica (`PROCESSING_FORMATTING`)**: A transcrição integral avança instantaneamente para o Gemini 2.5 Flash, alimentada por um extenso System Prompt encarregado de injetar estéticas musicais rigorosas (refrões, capitalizações, junção dos versos, reticências de fade out, etc). Este produto é consolidado em alto nível dentro de `formatted_transcription`.
+
+Somente após esta última devolutiva, o status atinge definitivamente o ponto de `COMPLETED`.

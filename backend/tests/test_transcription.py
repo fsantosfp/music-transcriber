@@ -35,9 +35,14 @@ def test_ct_04_transcription_success():
         session.add(music)
         session.commit()
     
-    with patch('app.tasks.transcription.WhisperService') as mock_service_class:
+    with patch('app.tasks.transcription.WhisperService') as mock_service_class, \
+         patch('app.services.llm_service.LLMService') as mock_llm_class:
         mock_instance = MagicMock()
         mock_service_class.return_value = mock_instance
+        
+        mock_llm_instance = MagicMock()
+        mock_llm_class.return_value = mock_llm_instance
+        mock_llm_instance.format_transcription.return_value = "Mocked Beautiful Lyrics"
         # Simulate successful translation
         mock_instance.transcribe_audio.return_value = {
             "segments": [
@@ -56,6 +61,7 @@ def test_ct_04_transcription_success():
             assert updated_music.status == MusicStatus.COMPLETED
             assert updated_music.raw_transcription is not None
             assert "Hello world" in updated_music.raw_transcription
+            assert updated_music.formatted_transcription == "Mocked Beautiful Lyrics"
 
 def test_ct_05_transcription_fallback_vocal_isolation():
     music_id = uuid.uuid4()

@@ -35,8 +35,20 @@ def process_transcription(music_id: str):
                 logger.info(f"Low confidence ({whisper_result.probability}). Diverting {music_id} to ISOLATING_VOCALS.")
             else:
                 music.raw_transcription = whisper_result.model_dump_json() # Validate and Serialize
+                music.status = MusicStatus.PROCESSING_FORMATTING
+                session.add(music)
+                session.commit()
+                
+                logger.info(f"Passing {music_id} to LLM formatting pipeline.")
+                
+                # Chain LLM Pipeline
+                from app.services.llm_service import LLMService
+                llm_service = LLMService()
+                formatted_text = llm_service.format_transcription(music.raw_transcription)
+                
+                music.formatted_transcription = formatted_text
                 music.status = MusicStatus.COMPLETED
-                logger.info(f"Transcription successful for {music_id} with probability {whisper_result.probability}.")
+                logger.info(f"Transcription and formatting successful for {music_id} with probability {whisper_result.probability}.")
 
             session.add(music)
             session.commit()
