@@ -75,10 +75,11 @@ def test_ct_05_transcription_fallback_vocal_isolation():
         session.add(music)
         session.commit()
     
-    with patch('app.tasks.transcription.WhisperService') as mock_service_class:
+    with patch('app.tasks.transcription.WhisperService') as mock_service_class, \
+         patch('app.services.demucs_service.DemucsService') as mock_demucs_class:
         mock_instance = MagicMock()
         mock_service_class.return_value = mock_instance
-        # Simulate low confidence
+        # Simulate low confidence always
         mock_instance.transcribe_audio.return_value = {
             "segments": [
                 {"start": 0.0, "end": 2.5, "text": "hmmm..."}
@@ -87,9 +88,16 @@ def test_ct_05_transcription_fallback_vocal_isolation():
             "probability": 0.20
         }
         
+        mock_demucs_instance = MagicMock()
+        mock_demucs_class.return_value = mock_demucs_instance
+        mock_demucs_instance.separate_vocals.return_value = "/app/uploads/processed/htdemucs/noise/vocals.wav"
+        
         process_transcription(str(music_id))
         
         with Session(engine) as session:
             updated_music = session.get(Music, music_id)
-            assert updated_music.status == MusicStatus.ISOLATING_VOCALS
+            # Recursive check ensures it loops once then fails
+            assert updated_music.status == MusicStatus.FAILED
+            assert updated_music.vocal_isolation_attempted is True
+            assert updated_music.audio_path == "uploads/processed/htdemucs/noise/vocals.wav"
             assert updated_music.raw_transcription is None
