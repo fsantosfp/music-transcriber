@@ -67,7 +67,7 @@ export function MusicViewer() {
         const ws = wavesurfer.current;
 
         ws.on('play', () => setIsPlaying(true));
-        ws.on('pause', () => { setIsPlaying(false); setPlayingSegment(null); });
+        ws.on('pause', () => setIsPlaying(false));
         ws.on('finish', () => { setIsPlaying(false); setPlayingSegment(null); });
 
         ws.setVolume(volume);
@@ -92,9 +92,19 @@ export function MusicViewer() {
 
     const toggleSegmentPlay = (index: number, start: number, end: number) => {
         if (!wavesurfer.current) return;
-        if (isPlaying && playingSegment === index) {
-            wavesurfer.current.pause();
-            setPlayingSegment(null);
+
+        if (playingSegment === index) {
+            if (isPlaying) {
+                wavesurfer.current.pause();
+            } else {
+                const currentTime = wavesurfer.current.getCurrentTime();
+                // Resume from cursor if inside segment bounds, otherwise restart segment
+                if (currentTime >= end || currentTime < start) {
+                    wavesurfer.current.play(start, end);
+                } else {
+                    wavesurfer.current.play(currentTime, end);
+                }
+            }
         } else {
             wavesurfer.current.play(start, end);
             setPlayingSegment(index);

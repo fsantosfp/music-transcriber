@@ -108,6 +108,16 @@ def update_music(music_id: uuid.UUID, music_update: MusicUpdate, session: Sessio
     for key, value in update_data.items():
         setattr(db_music, key, value)
         
+    # Se o raw_transcription foi atualizado pelo editor, refazemos a formatacao LLM com os dados novos.
+    if "raw_transcription" in update_data and update_data["raw_transcription"] is not None:
+        from app.services.llm_service import LLMService
+        llm_service = LLMService()
+        try:
+            formatted_text = llm_service.format_transcription(update_data["raw_transcription"])
+            db_music.formatted_transcription = formatted_text
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to rebuild formatted transcription from AI: {str(e)}")
+        
     session.add(db_music)
     session.commit()
     session.refresh(db_music)

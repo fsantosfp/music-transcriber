@@ -117,7 +117,7 @@ class LLMService:
                     system_instruction=SYSTEM_PROMPT,
                     temperature=0.1,
                     max_output_tokens=2048, # Hard cap the 'thinking' output waste
-                    thinking_config=types.ThinkingConfig(thinking_budget=0)
+                    thinking_config=types.ThinkingConfig(thinking_budget=32)
                 ),
             )
             logger.info("Formatting complete.")
