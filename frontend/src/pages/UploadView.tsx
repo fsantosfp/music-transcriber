@@ -35,21 +35,16 @@ export function UploadView() {
                         <p className="text-gray-600 text-center mb-6">
                             O seu arquivo estourou a fila com sucesso. A IA já está varrendo os ruídos.
                         </p>
-                        <div className="bg-gray-50 p-4 rounded-xl w-full text-sm font-mono text-gray-700 flex flex-col gap-3 border border-gray-100">
-                            <div className="flex justify-between border-b pb-2"><strong className="text-gray-900">ID da Transação:</strong> <span className="opacity-70">{successData.id.split('-')[0]}...</span></div>
-                            <div className="flex justify-between"><strong className="text-gray-900">Módulo Atual:</strong> <span className="text-blue-600 font-semibold">{successData.status}</span></div>
-                        </div>
-
-                        <div className="mt-8 flex gap-3 w-full">
+                        <div className="mt-6 flex flex-col gap-3 w-full">
+                            <Link to="/dashboard" className="w-full py-3 bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors text-white font-bold rounded-xl text-center shadow-lg shadow-blue-500/30">
+                                Acompanhar no Dashboard
+                            </Link>
                             <button
                                 onClick={() => setSuccessData(null)}
-                                className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 cursor-pointer transition-colors text-gray-700 font-semibold rounded-xl"
+                                className="w-full py-2 bg-transparent hover:bg-gray-50 cursor-pointer transition-colors text-gray-500 hover:text-gray-700 font-medium rounded-xl text-sm"
                             >
-                                Outro Upload
+                                Enviar outra música
                             </button>
-                            <Link to="/dashboard" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors text-white font-semibold rounded-xl text-center shadow-md shadow-blue-500/20">
-                                Ver Fila de Acompanhamento
-                            </Link>
                         </div>
                     </div>
                 )}
