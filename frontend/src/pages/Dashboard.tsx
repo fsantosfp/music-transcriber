@@ -176,11 +176,15 @@ export function Dashboard() {
                                                 checked={selectedTracks.includes(track.id)}
                                                 onChange={() => toggleSelection(track.id)} />
                                         </td>
-                                        <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
-                                            <div className="p-2 bg-gray-100 rounded-lg">
-                                                <FileAudio className="w-4 h-4 text-gray-500" />
+                                        <td className="px-6 py-4 font-medium text-gray-900 relative">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-gray-100 rounded-lg shrink-0">
+                                                    <FileAudio className="w-4 h-4 text-gray-500" />
+                                                </div>
+                                                <div className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[300px] lg:max-w-[400px]" title={track.filename}>
+                                                    {track.filename}
+                                                </div>
                                             </div>
-                                            {track.filename}
                                         </td>
                                         <td className="px-6 py-4 text-gray-500 font-mono text-xs">
                                             {new Date(track.created_at).toLocaleString('pt-BR')}

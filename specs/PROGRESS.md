@@ -20,17 +20,17 @@
 - [x] Tarefa 3.3: Editor de Trechos com "Play Local" (Sincronia).
 - [x] Tarefa 3.4: Fluxo de Deleção Segura (Padrão AWS)
 - [x] Tarefa 3.5: Paginação e Busca Global
-- [ ] Tarefa 3.6: Modo Karaoke (Visualização)
-> **GATE DE QUALIDADE:** Clicar no texto e ouvir o trecho exato no áudio.
+- [~] Tarefa 3.6: Modo Karaoke (Abortada: UX instável após testes)
+> **GATE DE QUALIDADE:** Clicar no texto e ouvir o trecho exato no áudio. (Concluído)
 
 ## Milestone 4: Entrega Final
 - [x] Tarefa 4.1: Exportação Final (Letras Formatas) - Download .txt, .docx, .pdf
 > **GATE DE QUALIDADE:** Validar se os arquivos binários gerados estão limpos, legíveis e formatados pela IA.
 
 ## Milestone 5: Polimento (UX & Robustez)
-- [ ] Tarefa 5.1: Ajuste nos Status (Frontend)
+- [x] Tarefa 5.1: Ajuste nos Status (Frontend)
 > **GATE DE QUALIDADE:** O sistema deve parecer "polido" e profissional, sem textos técnicos desnecessários.
 
 ## Milestone 6: Otimização (Performance & Limpeza)
-- [ ] Tarefa 6.1: Remover Informações Extras do Upload
+- [x] Tarefa 6.1: Remover Informações Extras do Upload
 > **GATE DE QUALIDADE:** O sistema deve ser rápido e leve, sem "engasgos" ou requisições desnecessárias.
