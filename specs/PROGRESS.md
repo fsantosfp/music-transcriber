@@ -28,9 +28,9 @@
 > **GATE DE QUALIDADE:** Validar se os arquivos binários gerados estão limpos, legíveis e formatados pela IA.
 
 ## Milestone 5: Polimento (UX & Robustez)
-- [ ] Tarefa 5.1: Ajuste nos Status (Frontend)
+- [x] Tarefa 5.1: Ajuste nos Status (Frontend)
 > **GATE DE QUALIDADE:** O sistema deve parecer "polido" e profissional, sem textos técnicos desnecessários.
 
 ## Milestone 6: Otimização (Performance & Limpeza)
-- [ ] Tarefa 6.1: Remover Informações Extras do Upload
+- [x] Tarefa 6.1: Remover Informações Extras do Upload
 > **GATE DE QUALIDADE:** O sistema deve ser rápido e leve, sem "engasgos" ou requisições desnecessárias.
