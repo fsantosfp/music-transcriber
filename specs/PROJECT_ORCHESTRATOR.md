@@ -11,6 +11,7 @@ Para cada tarefa definida na pasta `/specs/tasks/`, o agente deve:
 4. **Escrever e Executar Testes Unitários** (Pytest / Vitest) conforme `SPEC_GLOBAL_TESTING.md`.
 5. **Atualizar o `PROGRESS.md`** marcando a tarefa como concluída.
 6. **Reportar ao Usuário** o resultado e pedir permissão para avançar.
+7. **Realizar o commit** da tarefa concluída.
 
 ## 🛑 Regras de Ouro e Bloqueio
 - **Contexto Isolado:** Cada tarefa deve ser executada em um branch Git separado (ex: feature/task-1-1).

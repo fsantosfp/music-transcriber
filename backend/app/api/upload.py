@@ -7,6 +7,12 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import Session
 from app.core.db import engine
 from app.models.music import Music, MusicStatus, MusicUpdate
+from app.core.config import MAX_UPLOAD_SIZE_MB
+import aiofiles
+from app.tasks.transcription import process_transcription
+
+from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter()
 
@@ -83,14 +89,52 @@ def get_music_status(music_id: uuid.UUID, session: Session = Depends(get_session
         raise HTTPException(status_code=404, detail="Music not found")
     return music
 
-@router.get("/", response_model=list[Music])
-def list_all_music(session: Session = Depends(get_session)):
+from fastapi import Query
+from pydantic import BaseModel
+from typing import Optional
+
+class PaginatedMusicResponse(BaseModel):
+    items: list[Music]
+    total: int
+    page: int
+    size: int
+    pages: int
+
+@router.get("/", response_model=PaginatedMusicResponse)
+def list_all_music(
+    session: Session = Depends(get_session),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
+    q: Optional[str] = None
+):
     """
-    List all uploaded music tracks, ordered by newest first.
+    List uploaded music tracks with pagination and global search.
     """
-    from sqlmodel import select
-    statement = select(Music).order_by(Music.created_at.desc())
-    return session.exec(statement).all()
+    from sqlmodel import select, or_, func
+    import math
+
+    count_query = select(func.count(Music.id))
+    search_query = select(Music)
+
+    if q:
+        search_filter = or_(
+            Music.filename.contains(q.lower()),
+            Music.formatted_transcription.contains(q)
+        )
+        count_query = count_query.where(search_filter)
+        search_query = search_query.where(search_filter)
+
+    total = session.exec(count_query).one()
+    search_query = search_query.order_by(Music.created_at.desc()).offset((page - 1) * size).limit(size)
+    items = session.exec(search_query).all()
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": math.ceil(total / size) if total > 0 else 1
+    }
 
 @router.patch("/{music_id}", response_model=Music)
 def update_music(music_id: uuid.UUID, music_update: MusicUpdate, session: Session = Depends(get_session)):
@@ -192,3 +236,59 @@ def export_music_lyrics(music_id: uuid.UUID, format: str = "txt", session: Sessi
         return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename={music.filename}.pdf"})
         
     raise HTTPException(status_code=400, detail="Invalid format requested. Valid formats: txt, docx, pdf.")
+
+@router.post("/{music_id}/retry", response_model=Music)
+def retry_music_processing(music_id: uuid.UUID, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
+    """
+    Cleans up any previous transcriptions or fallback counters, resetting the pipeline completely
+    while aggressively reusing the physical media file uploaded beforehand.
+    """
+    music = session.get(Music, music_id)
+    if not music:
+        raise HTTPException(status_code=404, detail="Music not found")
+        
+    music.status = MusicStatus.PENDING
+    music.raw_transcription = None
+    music.formatted_transcription = None
+    music.vocal_isolation_attempted = False
+    
+    session.add(music)
+    session.commit()
+    session.refresh(music)
+    
+    # Restart the workflow from scratch
+    background_tasks.add_task(process_transcription, str(music.id))
+    return music
+
+@router.delete("/{music_id}", status_code=204)
+def delete_music(music_id: uuid.UUID, session: Session = Depends(get_session)):
+    """
+    Safely purges the database record alongside all physical media (Original and Vocal stems) from the /uploads folder.
+    """
+    music = session.get(Music, music_id)
+    if not music:
+        raise HTTPException(status_code=404, detail="Music not found")
+        
+    base_dir = "/app"
+    
+    # 1. Attempt to remove original audio
+    if music.audio_path:
+        full_audio_path = os.path.join(base_dir, music.audio_path)
+        try:
+            if os.path.exists(full_audio_path):
+                os.remove(full_audio_path)
+        except Exception as e:
+            print(f"Failed to delete original audio file {full_audio_path}: {e}")
+            
+    # 2. Attempt to remove isolated vocal traces
+    vocal_path = os.path.join(base_dir, "uploads", f"{music.id}_vocals.wav")
+    try:
+        if os.path.exists(vocal_path):
+            os.remove(vocal_path)
+    except Exception as e:
+        print(f"Failed to delete vocal traces {vocal_path}: {e}")
+        
+    # 3. Nuke from SQLite
+    session.delete(music)
+    session.commit()
+    return None
