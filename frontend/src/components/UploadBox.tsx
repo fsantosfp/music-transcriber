@@ -4,7 +4,9 @@ import { UploadCloud, Loader2 } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { Toaster } from './Toaster';
 
-const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
+const MAX_SIZE_MB = Number(import.meta.env.VITE_MAX_UPLOAD_SIZE_MB) || 50;
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
 
 type UploadBoxProps = {
     onSuccess: (data: { id: string; status: string }) => void;
@@ -16,7 +18,8 @@ export function UploadBox({ onSuccess }: UploadBoxProps) {
 
     const onDrop = useCallback(async (acceptedFiles: File[], fileRejections: any[]) => {
         if (fileRejections.length > 0) {
-            setError('Formato inválido ou arquivo muito grande. (Max 50MB, formatos: mp3, wav, ogg, m4a)');
+      setError(`Formato inválido ou arquivo muito grande. (Max ${MAX_SIZE_MB}MB, formatos: mp3, wav, ogg, m4a)`);
+
             return;
         }
 
@@ -76,7 +79,8 @@ export function UploadBox({ onSuccess }: UploadBoxProps) {
                         ) : (
                             <div className="text-center">
                                 <p className="text-gray-700 font-medium mb-1">Arraste um arquivo de áudio ou clique aqui.</p>
-                                <p className="text-gray-400 text-sm">mp3, wav, ogg, m4a (Máx 50MB)</p>
+                                <p className="text-gray-400 text-sm">mp3, wav, ogg, m4a (Máx {MAX_SIZE_MB}MB)</p>
+
                             </div>
                         )}
                     </>
